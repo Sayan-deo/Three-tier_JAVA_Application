@@ -1,4 +1,3 @@
-# .github/workflows/compose.yml
 name: Compose CI
 
 on:
@@ -11,18 +10,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      # 1️ Checkout Code
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
+      # 2️ Setup Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Build compose
-        run: docker compose build
+      # 3️ Measure Build Time
+      - name: Build Docker Compose
+        id: build_step
+        run: |
+          echo "Starting build..."
+          START_TIME=$(date +%s)
 
-      - name: Run compose
-        run: docker compose up -d
+          docker compose build
 
-      - name: Stop compose
+          END_TIME=$(date +%s)
+          BUILD_TIME=$((END_TIME - START_TIME))
+
+          echo "Build Time: $BUILD_TIME seconds"
+          echo "BUILD_TIME=$BUILD_TIME" >> $GITHUB_ENV
+
+      # 4️ Run Decision Engine
+      - name: Run Decision Engine
+        id: decision
+        run: |
+          DEPLOY=$(python decision_engine.py)
+          echo "Decision: $DEPLOY"
+          echo "DEPLOY=$DEPLOY" >> $GITHUB_ENV
+
+      # 5️ Conditional Deployment
+      - name: Run Docker Compose
+        if: env.DEPLOY == 'true'
+        run: |
+          echo "Deployment Approved"
+          docker compose up -d
+
+      # 6️ Always Shutdown Containers
+      - name: Stop Docker Compose
         if: always()
         run: docker compose down
-
