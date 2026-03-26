@@ -24,9 +24,6 @@ jobs:
 
       # 3️ Measure Build Time
       - name: Build Docker Compose
-        env:
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         run: |
           START_TIME=$(date +%s)
           docker compose build
@@ -46,6 +43,9 @@ jobs:
       # 5️ Conditional Deployment
       - name: Run Docker Compose
         if: env.DEPLOY == 'true'
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         run: docker compose up -d
 
       # 6️ Stop Containers
