@@ -59,6 +59,21 @@ jobs:
         if: env.DEPLOY == 'true'
         uses: aws-actions/amazon-ecr-login@v2
 
+
+        # Tag + Push ALL services
+      - name: Tag and Push Images
+        if: env.DEPLOY == 'true'
+        run: |
+          ECR=${{ secrets.ECR_URI }}
+
+          docker tag frontend_app:latest $ECR/frontend_app:latest
+          docker tag backend_app:latest $ECR/backend_app:latest
+          docker tag backend_database:latest $ECR/backend_database:latest
+
+          docker push $ECR/frontend_app:latest
+          docker push $ECR/backend_app:latest
+          docker push $ECR/backend_database:latest
+
       # 5️ Conditional Deployment
       - name: Run Docker Compose
         if: env.DEPLOY == 'true'
